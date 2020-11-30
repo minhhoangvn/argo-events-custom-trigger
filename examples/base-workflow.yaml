@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: test-template
+spec:
+  entrypoint: basic
+  templates:
+    - name: basic
+      script:
+        image: python:alpine3.12
+        command:
+          - "python"
+        source: |
+          import random
+          for i in range(0,100):
+            print(random.randint(0,i))
+    - name: basic-with-input
+      inputs:
+        parameters:
+          - name: max_range
+      script:
+        image: python:alpine3.12
+        command:
+          - "python"
+        source: |
+          import random
+          for i in range(0,{{inputs.parameters.max_range}}):
+            print(random.randint(0,i))

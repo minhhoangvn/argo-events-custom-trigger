@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook
+  labels:
+    webhook: "coe-demo"
+spec:
+  template:
+    metadata:
+      labels:
+        webhook: "coe-demo"
+  webhook:
+    coe:
+      port: "8080"
+      endpoint: /coe-demo
+      method: POST
+    custom:
+      port: "8080"
+      endpoint: /coe-demo-custom
+      method: POST

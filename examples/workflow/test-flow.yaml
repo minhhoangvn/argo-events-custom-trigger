@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: hello-world-custom
+  labels:
+    workflows.argoproj.io/archive-strategy: "false"
+spec:
+  entrypoint: execute-all
+  templates:
+    - name: execute-all
+      steps:
+        - - name: step-1
+            template: minhhoang
+          - name: step-2
+            template: testing-coe
+          - name: step-3
+            template: call-base-template-basic
+          - name: step-4
+            template: call-base-template-basic-input
+          - name: step-5
+            template: call-base-template-basic-input-limit-parallel
+    - name: minhhoang
+      container:
+        image: docker/whalesay:latest
+        command:
+          - "cowsay"
+        args:
+          - "hello minh hoang!"
+    - name: testing-coe
+      container:
+        image: docker/whalesay:latest
+        command:
+          - "cowsay"
+        args:
+          - "hello testing coe!"
+    - name: call-base-template-basic
+      steps:
+        - - name: execute-base-template
+            templateRef:
+              name: test-template
+              template: basic
+    - name: call-base-template-basic-input
+      steps:
+        - - name: execute-base-template
+            arguments:
+              parameters:
+                - name: max_range
+                  value: "{{item}}"
+            withItems: [1, 20, 30, 100]
+            templateRef:
+              name: test-template
+              template: basic-with-input
+    - name: call-base-template-basic-input-limit
+      steps:
+        - - name: execute-base-template
+            arguments:
+              parameters:
+                - name: max_range
+                  value: "{{item}}"
+            withItems: [1, 20, 30, 100]
+            templateRef:
+              name: test-template
+              template: basic-with-input
+    - name: call-base-template-basic-input-limit-parallel
+      parallelism: 1
+      steps:
+        - - name: execute-base-template
+            arguments:
+              parameters:
+                - name: max_range
+                  value: "{{item}}"
+            withItems: [1, 20, 30, 100]
+            templateRef:
+              name: test-template
+              template: basic-with-input

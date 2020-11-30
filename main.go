@@ -9,6 +9,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/minhhoangvn/argo-events-custom-trigger/triggers"
 	"google.golang.org/grpc"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -56,6 +57,11 @@ func (trigger *customTrigger) ApplyPolicy(ctx context.Context, in *triggers.Appl
 
 func main() {
 	lis, err := net.Listen("tcp", port)
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Cluster Config", config)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: webhook-custom-sensor
+spec:
+  template:
+    spec:
+      serviceAccountName: argo-events-sa
+  dependencies:
+    - name: argo-event-coe
+      eventSourceName: webhook
+      eventName: custom
+  triggers:
+    - template:
+        name: execute-all
+        custom:
+          # the url of the trigger server.
+          serverURL: custom-trigger-server.argo.svc:6969
+          spec:
+            url: "https://github.com/minhhoangvn"
+            data: "minhhoangtest"
+            anotherkey: "key 1 2 3"
+            thisisminhhoang: "yolo!"
