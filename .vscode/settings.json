@@ -1,0 +1,19 @@
+{
+  "files.associations": {
+    "*-flow.yaml": "yaml"
+  },
+  "python.formatting.provider": "yapf",
+  "yaml.completion": true,
+  "yaml.format.enable": true,
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/argoproj/argo/master/api/jsonschema/schema.json": [
+      "*-flow.yaml",
+      "/examples/*.yaml",
+      "/examples/*-flow.yaml",
+      "/examples/workflow/**/*.yaml",
+      "/examples/workflow/*.yaml",
+      "/examples/workflow/*-flow.yaml",
+      "/examples/**/*.yaml"
+    ]
+  }
+}
