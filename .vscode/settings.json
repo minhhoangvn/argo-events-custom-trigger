@@ -1,4 +1,5 @@
 {
+  "python.venvPath": "/Users/minhhoang/virtualenvs/",
   "files.associations": {
     "*-flow.yaml": "yaml"
   },

@@ -10,13 +10,12 @@ spec:
     - name: execute-e2e
       container:
         image: python:3.8.6
-
-        command: ["/bin/bash", -c]
-        args:
-          [
-            "curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add;echo 'deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google-chrome.list;apt update && apt list --upgradable && apt upgrade;apt install -y wget google-chrome-stable unzip xvfb libxi6 libgconf-2-4;mkdir /chrome-headless/;wget https://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip --directory-prefix=/chrome-headless;unzip /chrome-headless/chromedriver_linux64.zip -d /chrome-headless;mv /chrome-headless/chromedriver /usr/bin/chromedriver;chown root:root /usr/bin/chromedriver",
-          ]
     - name: execute-environment
       container:
         image: python:3.8.6
       daemon: true
+      command: ["/bin/bash", -c]
+      args:
+        [
+          "curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add;echo 'deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google-chrome.list;apt update -y && apt list --upgradable && apt upgrade -y;apt install -y wget google-chrome-stable unzip xvfb libxi6 libgconf-2-4 ssh sshpass;mkdir /chrome-headless/;wget https://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip --directory-prefix=/chrome-headless;unzip /chrome-headless/chromedriver_linux64.zip -d /chrome-headless;mv /chrome-headless/chromedriver /usr/bin/chromedriver;chown root:root /usr/bin/chromedriver;echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config;echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config;service ssh start;echo -e 'root\nroot\n' | passwd",
+        ]

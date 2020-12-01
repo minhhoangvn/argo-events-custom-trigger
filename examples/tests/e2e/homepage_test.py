@@ -14,7 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# This sample source code is used for demonstration a basic argo workflow with end2end test
+# MinhHoang
+# This sample source code is used for demonstration a basic argo workflow with end2end automation test
 from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver import Chrome
@@ -33,18 +34,30 @@ class VirtualActions(Enum):
     STOP = 'stop'
 
 
-class DriverFactory(object):
+class ChromeDriverFactory(object):
     @property
     def webdriver(self):
+        if self.__driver is None:
+            self.start_driver()
         return self.__driver
 
-    def __init__(self):
-        pass
+    def __init__(self, is_headless = True, executable_path='/usr/bin/chromedriver'):
+        self.__is_headless = is_headless
+        self.__executable_path = executable_path
+        self.__driver: webdriver = None
 
+    def start_driver(self):
+        chrome_options = webdriver.ChromeOptions()
+        if self.__is_headless:
+            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--no-sandbox')
+        self.__driver: webdriver = webdriver.Chrome(executable_path=self.__executable_path, options=chrome_options, service_args=['--verbose', '--log-path=/tmp/chromedriver.log'])
 
-def create_webdriver():
-    chrome_option = webdriver.ChromeOptions()
-    chrome_option.set_headless(True)
+    def quit_driver(self):
+        if self.__driver is None:
+            return print('Driver Session Already Terminated!!!')
+        self.__driver.quit()
+        self.__driver = None
 
 
 def create_virutal_display(height, width):
@@ -91,3 +104,4 @@ class HomePage(object):
 def run_test():
     virtual_display = create_virutal_display()
     virtual_display_control(virtual_display, VirtualActions.START)
+
