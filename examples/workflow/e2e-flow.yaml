@@ -9,47 +9,64 @@ spec:
   templates:
     - name: execute-e2e
       steps:
-        - - name: step-1
-            template: execute-environment
-        - - name: step-2
+        - - name: set-up-execute-environment
+            template: set-up-execute-environment
+        - - name: set-up-selenium-packages
             arguments:
-              {
-                parameters:
-                  [
-                    { name: cmd, value: "ifconfig" },
-                    { name: ip, value: "{{steps.step-1.ip}}" },
-                  ],
-              }
-            template: execute-command
+              parameters:
+                - name: ip
+                  value: "{{steps.set-up-execute-environment.ip}}"
+            template: set-up-e2e-tests-packages
     - name: execute-command
-      daemon: true
       inputs:
         parameters:
           - name: cmd
           - name: ip
       container:
-        name: execute-environment
+        name: execute-command
         image: ictu/sshpass
         command: ["/bin/sh", "-c"]
         args:
           [
             "sshpass -p root ssh -o StrictHostKeyChecking=no root@{{inputs.parameters.ip}} {{inputs.parameters.cmd}}",
           ]
-    - name: execute-environment
+    - name: set-up-e2e-tests-packages
+      inputs:
+        parameters:
+          - name: ip
+      steps:
+        - - name: upgrade-pip-python-package
+            arguments:
+              {
+                parameters:
+                  [
+                    { name: cmd, value: "pip install --upgrade pip" },
+                    { name: ip, value: "{{inputs.parameters.ip}}" },
+                  ],
+              }
+            template: execute-command
+        - - name: install-pip-selenium-packages
+            arguments:
+              {
+                parameters:
+                  [
+                    {
+                      name: cmd,
+                      value: "pip install selenium pyvirtualdisplay",
+                    },
+                    { name: ip, value: "{{inputs.parameters.ip}}" },
+                  ],
+              }
+            template: execute-command
+    - name: set-up-execute-environment
       daemon: true
       container:
-        name: execute-environment
+        name: set-up-execute-environment
         image: hnminh/execute-argo-flow-env:latest
-        command: ["/bin/bash", "-c"]
         ports:
           - containerPort: 22
           - containerPort: 80
           - containerPort: 443
-        args: ["service nginx start && service ssh start"]
-        # args:
-        #   [
-        #     "export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 && curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && echo 'deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google-chrome.list && apt update -y && apt list --upgradable && apt upgrade -y && apt-get install -y wget google-chrome-stable unzip xvfb libxi6 libgconf-2-4 ssh sshpass > /dev/null 2>&1 && mkdir /chrome-headless/ && wget https://chromedriver.storage.googleapis.com/{{inputs.parameters.chromedriver_version}}/chromedriver_linux64.zip --directory-prefix=/chrome-headless && unzip /chrome-headless/chromedriver_linux64.zip -d /chrome-headless && mv /chrome-headless/chromedriver /usr/bin/chromedriver && chown root:root /usr/bin/chromedriver;echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && echo -e 'root\nroot' | passwd && service ssh start && sleep 30",
-        #   ]
         # It seems argo has issue with postStart and postStop lifecycle hook
         # https://github.com/argoproj/argo/issues/3410
         # lifecycle:
@@ -62,14 +79,16 @@ spec:
         #           "export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 && curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && echo 'deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google-chrome.list && apt update -y && apt list --upgradable && apt upgrade -y && apt-get install -y wget google-chrome-stable unzip xvfb libxi6 libgconf-2-4 ssh sshpass > /dev/null 2>&1 && mkdir /chrome-headless/ && wget https://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip --directory-prefix=/chrome-headless && unzip /chrome-headless/chromedriver_linux64.zip -d /chrome-headless && mv /chrome-headless/chromedriver /usr/bin/chromedriver && chown root:root /usr/bin/chromedriver;echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && service ssh start && echo -e 'root\nroot' | passwd",
         #         ]
         livenessProbe:
-          exec:
-            command: ["/bin/bash", "-c", "ls -la"]
-          initialDelaySeconds: 180
-          timeoutSeconds: 15
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
           failureThreshold: 10
         readinessProbe:
-          exec:
-            command: ["/bin/bash", "-c", "ls -la"]
-          initialDelaySeconds: 180
-          timeoutSeconds: 15
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
           failureThreshold: 10
