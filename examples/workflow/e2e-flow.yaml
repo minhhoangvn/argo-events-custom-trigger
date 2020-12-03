@@ -17,6 +17,12 @@ spec:
                 - name: ip
                   value: "{{steps.set-up-execute-environment.ip}}"
             template: set-up-e2e-tests-packages
+        - - name: execute-e2e-test
+            arguments:
+              parameters:
+                - name: ip
+                  value: "{{steps.set-up-execute-environment.ip}}"
+            template: execute-test
     - name: execute-command
       inputs:
         parameters:
@@ -58,8 +64,32 @@ spec:
                   ],
               }
             template: execute-command
+    - name: execute-test
+      inputs:
+        parameters:
+          - name: ip
+      steps:
+        - - name: execute-test
+            arguments:
+              {
+                parameters:
+                  [
+                    {
+                      name: cmd,
+                      value: "python /src/examples/tests/e2e/home_page_test.py && ls -la && pwd",
+                    },
+                    { name: ip, value: "{{inputs.parameters.ip}}" },
+                  ],
+              }
+            template: execute-command
     - name: set-up-execute-environment
       daemon: true
+      inputs:
+        artifacts:
+          - name: argo-events-custom-trigger
+            path: /src
+            git:
+              repo: https://github.com/minhhoangvn/argo-events-custom-trigger.git
       container:
         name: set-up-execute-environment
         image: hnminh/execute-argo-flow-env:latest
