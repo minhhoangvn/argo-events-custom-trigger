@@ -107,17 +107,21 @@ class HomePage(object):
         self.__driver: Chrome = driver
 
     def navigate_to_login_page(self):
+        print('Navigate to home page')
         self.__driver.get(SystemUnderTestProps.URL.value)
 
     def login_to_dashboard(self):
+        print('Click to login panel button')
         WebDriverWait(self.__driver, 30).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, self.icon_login)))
         self.__driver.find_element_by_css_selector(self.icon_login).click()
+        print('Set value to username field')
         WebDriverWait(self.__driver, 30).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, self.txt_username)))
         self.__driver.find_element_by_css_selector(self.txt_username).clear()
         self.__driver.find_element_by_css_selector(
             self.txt_username).send_keys(SystemUnderTestProps.USER_NAME.value)
+        print('Set value to password field')
         self.__driver.find_element_by_css_selector(self.txt_password).clear()
         self.__driver.find_element_by_css_selector(
             self.txt_password).send_keys(SystemUnderTestProps.PASSWORD.value)
@@ -125,9 +129,11 @@ class HomePage(object):
         time.sleep(10)
 
     def capture_home_page_screen_shot(self):
+        print('Save home page screenshot')
         self.__driver.get_screenshot_as_file('home-page.png')
 
     def verify_login_successfully(self):
+        print('Verify login')
         self.__driver.get(SystemUnderTestProps.MY_ACCOUNT_URL.value)
         WebDriverWait(self.__driver, 30).until(
             EC.visibility_of_element_located(
@@ -138,9 +144,7 @@ class HomePage(object):
 
 
 def run_test():
-    chrome_driver = ChromeDriverFactory(
-        executable_path='/Users/minhhoang/Downloads/chromedriver',
-        is_headless=False)
+    chrome_driver = ChromeDriverFactory()
     chrome_driver.start_driver()
     home_page = HomePage(chrome_driver.webdriver)
     virtual_display = create_virutal_display(1920, 1080)
@@ -158,4 +162,5 @@ def run_test():
         virtual_display_control(virtual_display, VirtualActions.STOP)
 
 
-run_test()
+if __name__ == "__main__":
+    run_test()
