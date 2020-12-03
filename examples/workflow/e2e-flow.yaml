@@ -34,7 +34,7 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           [
-            "sshpass -p root ssh -o StrictHostKeyChecking=no root@{{inputs.parameters.ip}} {{inputs.parameters.cmd}}",
+            "sshpass -p root ssh -o StrictHostKeyChecking=no root@{{inputs.parameters.ip}} '{{inputs.parameters.cmd}}'",
           ]
     - name: set-up-e2e-tests-packages
       inputs:
@@ -76,12 +76,36 @@ spec:
                   [
                     {
                       name: cmd,
-                      value: "python /src/examples/tests/e2e/home_page_test.py && ls -la && pwd",
+                      value: "python /src/examples/tests/e2e/home_page_test.py && cat /root/home-page.png",
                     },
                     { name: ip, value: "{{inputs.parameters.ip}}" },
                   ],
               }
             template: execute-command
+        - - name: export-test-result
+            arguments:
+              { parameters: [{ name: ip, value: "{{inputs.parameters.ip}}" }] }
+            template: export-test-result
+    - name: export-test-result
+      inputs:
+        parameters:
+          - name: ip
+      container:
+        name: export-test-result
+        image: hnminh/execute-argo-flow-env:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          [
+            "pwd && ls -la && sshpass -p 'root' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{inputs.parameters.ip}}:/root/home-page.png / && ls -la && pwd",
+          ]
+      outputs:
+        artifacts:
+          - name: test-result
+            path: /home-page.png
+            archive:
+              tar:
+                # no compression (also accepts the standard gzip 1 to 9 values)
+                compressionLevel: 0
     - name: set-up-execute-environment
       daemon: true
       inputs:
