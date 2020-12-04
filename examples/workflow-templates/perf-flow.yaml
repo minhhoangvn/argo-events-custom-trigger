@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: performance-job
+  labels:
+    workflows.argoproj.io/archive-strategy: "always"
+spec:
+  entrypoint: execute-performance-test
+  templates:
+    - name: execute-performance-test
+      steps:
+        - - name: execute-test
+            template: execute-test
+    - name: execute-test
+      inputs:
+        artifacts:
+          - name: argo-events-custom-trigger
+            path: /src
+            git:
+              repo: https://github.com/minhhoangvn/argo-events-custom-trigger.git
+          - name: myfile
+            path: /tmp/demo.js
+            raw:
+              data: |
+                import http from 'k6/http';
+                import { sleep } from 'k6';
+                export let options = {
+                  vus: 10,
+                  duration: '5s',
+                };
+                export default function () {
+                  http.get('http://test.k6.io');
+                  sleep(1);
+                }
+      container:
+        name: k6-container
+        image: hnminh/k6
+        command: ["/bin/sh", "-c"]
+        args:
+          [
+            "k6 run --out json=/tmp/test.json --summary-export=/tmp/summary.json /tmp/demo.js",
+          ]
+      outputs:
+        artifacts:
+          - name: test-result
+            path: /tmp
+            archive:
+              tar:
+                # no compression (also accepts the standard gzip 1 to 9 values)
+                compressionLevel: 0

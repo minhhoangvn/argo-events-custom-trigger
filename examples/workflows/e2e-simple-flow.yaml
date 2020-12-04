@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: end-2-end-flow-
+spec:
+  entrypoint: execute
+  templates:
+    - name: execute
+      steps:
+        - - name: automation-e2e
+            templateRef:
+              name: e2e-softway-job
+              template: execute-e2e
+          - name: performance-e2e
+            templateRef:
+              name: performance-job
+              template: execute-performance-test

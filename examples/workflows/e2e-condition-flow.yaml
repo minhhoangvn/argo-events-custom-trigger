@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: conditional-flow-
+spec:
+  entrypoint: execute
+  templates:
+    - name: execute
+      steps:
+        - - name: set-up-execute-environment
+            templateRef:
+              name: e2e-hardway-job
+              template: set-up-execute-environment
+        - - name: set-up-selenium-packages
+            arguments:
+              parameters:
+                - name: ip
+                  value: "{{steps.set-up-execute-environment.ip}}"
+            templateRef:
+              name: e2e-hardway-job
+              template: set-up-e2e-tests-packages
+        - - name: execute-e2e-test
+            arguments:
+              parameters:
+                - name: ip
+                  value: "{{steps.set-up-execute-environment.ip}}"
+            templateRef:
+              name: e2e-hardway-job
+              template: execute-test
+        - - name: performance-e2e
+            templateRef:
+              name: performance-job
+              template: execute-test
+        - - name: conditional-exit-code-0
+            template: log-exit-code-0
+            when: "{{steps.performance-e2e.exitCode}} == 0"
+          - name: conditional-exit-code-1
+            template: log-exit-code-1
+            when: "{{steps.performance-e2e.exitCode}} != 0"
+    - name: log-exit-code-0
+      container:
+        image: docker/whalesay:latest
+        command:
+          - "cowsay"
+        args:
+          - "hello performance test exit code 0!"
+    - name: log-exit-code-1
+      container:
+        image: docker/whalesay:latest
+        command:
+          - "cowsay"
+        args:
+          - "hello performance test exit code 1!"
