@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Workflow
+kind: WorkflowTemplate
 metadata:
-  generateName: e2e-jobs-
+  name: e2e-hardway-job
   labels:
     workflows.argoproj.io/archive-strategy: "always"
 spec:

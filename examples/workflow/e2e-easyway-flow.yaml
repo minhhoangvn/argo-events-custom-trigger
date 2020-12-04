@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: e2e-softway-job
+  labels:
+    workflows.argoproj.io/archive-strategy: "always"
+spec:
+  entrypoint: execute-e2e
+  templates:
+    - name: execute-e2e
+      steps:
+        - - name: execute-test
+            template: execute-test
+    - name: execute-test
+      daemon: true
+      inputs:
+        artifacts:
+          - name: argo-events-custom-trigger
+            path: /src
+            git:
+              repo: https://github.com/minhhoangvn/argo-events-custom-trigger.git
+      container:
+        name: set-up-execute-environment
+        image: hnminh/execute-argo-flow-env:latest
+        ports:
+          - containerPort: 22
+          - containerPort: 80
+          - containerPort: 443
+        command: ["/bin/sh", "-c"]
+        args:
+          [
+            "service nginx start && service ssh start && pip install --upgrade pip && pip install selenium pyvirtualdisplay && python /src/examples/tests/e2e/home_page_test.py && pwd && ls -la",
+          ]
+        # It seems argo has issue with postStart and postStop lifecycle hook
+        # https://github.com/argoproj/argo/issues/3410
+        # lifecycle:
+        #   postStart:
+        #     exec:
+        #       command:
+        #         [
+        #           "/bin/bash",
+        #           "-c",
+        #           "export APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 && curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && echo 'deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google-chrome.list && apt update -y && apt list --upgradable && apt upgrade -y && apt-get install -y wget google-chrome-stable unzip xvfb libxi6 libgconf-2-4 ssh sshpass > /dev/null 2>&1 && mkdir /chrome-headless/ && wget https://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip --directory-prefix=/chrome-headless && unzip /chrome-headless/chromedriver_linux64.zip -d /chrome-headless && mv /chrome-headless/chromedriver /usr/bin/chromedriver && chown root:root /usr/bin/chromedriver;echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && service ssh start && echo -e 'root\nroot' | passwd",
+        #         ]
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 10
+      outputs:
+        artifacts:
+          - name: test-result
+            path: /home-page.png
+            archive:
+              tar:
+                # no compression (also accepts the standard gzip 1 to 9 values)
+                compressionLevel: 0
